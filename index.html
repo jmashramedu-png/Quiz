@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz - MCQ Practice</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fc;
+      color: #172554;
+    }
+
+    header {
+      background: #ffffff;
+      padding: 20px 8%;
+      border-bottom: 1px solid #dbe4f0;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 32px;
+      border-radius: 18px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    .badge {
+      display: inline-block;
+      background: #dbeafe;
+      color: #1d4ed8;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .question {
+      margin-top: 28px;
+      font-size: 20px;
+      line-height: 1.5;
+      font-weight: bold;
+    }
+
+    .option {
+      display: block;
+      padding: 15px;
+      margin: 12px 0;
+      border: 1px solid #dbe4f0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .option:hover {
+      background: #eff6ff;
+      border-color: #2563eb;
+    }
+
+    .option.selected {
+      background: #dbeafe;
+      border-color: #2563eb;
+    }
+
+    .option input {
+      margin-right: 10px;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    button {
+      border: none;
+      padding: 13px 22px;
+      border-radius: 9px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .primary:hover {
+      background: #1d4ed8;
+    }
+
+    .secondary {
+      background: #e2e8f0;
+      color: #172554;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .progress {
+      height: 7px;
+      background: #e2e8f0;
+      border-radius: 10px;
+      margin-top: 22px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #2563eb;
+      transition: width 0.3s;
+    }
+
+    .result {
+      margin-top: 25px;
+      padding: 20px;
+      background: #f0fdf4;
+      border-radius: 12px;
+      line-height: 1.8;
+    }
+
+    footer {
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+      padding: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 20px auto;
+        padding: 12px;
+      }
+
+      .card {
+        padding: 22px;
+      }
+
+      header {
+        padding: 18px 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>🎓 Quiz</header>
+
+<main class="container">
+  <section class="card">
+    <span class="badge">MCQ PRACTICE</span>
+
+    <h1 id="topicTitle">Business Environment</h1>
+
+    <p class="description">
+      Test your knowledge with this practice quiz.
+      Select the correct answer for each question.
+    </p>
+
+    <div id="quizArea">
+      <div id="questionNumber"></div>
+
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div class="question" id="questionText"></div>
+
+      <div id="options"></div>
+
+      <div class="button-row">
+        <button class="secondary" id="previousBtn"
+          onclick="previousQuestion()">Previous</button>
+
+        <button class="primary" id="nextBtn"
+          onclick="nextQuestion()">Next</button>
+      </div>
+    </div>
+
+    <div id="resultArea" hidden></div>
+  </section>
+</main>
+
+<footer>Quiz — Learn. Practice. Excel.</footer>
+
+<script>
+  const questionBanks = {
+    "business-environment": {
+      title: "Business Environment",
+      questions: [
+        {
+          question: "What is the business environment?",
+          options: [
+            "Only internal factors",
+            "Only external factors",
+            "Internal and external factors affecting business",
+            "Only financial factors"
+          ],
+          answer: 2
+        },
+        {
+          question: "Which of the following is an economic factor?",
+          options: [
+            "Inflation",
+            "Company logo",
+            "Office furniture",
+            "Employee uniform"
+          ],
+          answer: 0
+        },
+        {
+          question: "What does SWOT stand for?",
+          options: [
+            "Sales, Work, Operations, Trade",
+            "Strengths, Weaknesses, Opportunities, Threats",
+            "Systems, Wealth, Organisation, Technology",
+            "Strategy, Work, Objectives, Targets"
+          ],
+          answer: 1
+        },
+        {
+          question: "Which institution regulates monetary policy in India?",
+          options: [
+            "SEBI",
+            "NITI Aayog",
+            "Reserve Bank of India",
+            "Election Commission"
+          ],
+          answer: 2
+        },
+        {
+          question: "What is a business opportunity?",
+          options: [
+            "A favourable condition for business growth",
+            "A guaranteed business loss",
+            "A tax penalty",
+            "A decline in customer demand"
+          ],
+          answer: 0
+        }
+      ]
+    },
+
+    "financial-accounting": {
+      title: "Financial Accounting",
+      questions: [
+        {
+          question: "Which statement shows assets and liabilities?",
+          options: [
+            "Cash book",
+            "Balance sheet",
+            "Sales journal",
+            "Purchase order"
+          ],
+          answer: 1
+        },
+        {
+          question: "What is the basic accounting equation?",
+          options: [
+            "Assets = Liabilities + Capital",
+            "Assets = Sales - Expenses",
+            "Capital = Assets + Liabilities",
+            "Profit = Assets + Drawings"
+          ],
+          answer: 0
+        }
+      ]
+    }
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const requestedTopic = params.get("topic") || "business-environment";
+  const quiz = questionBanks[requestedTopic];
+
+  let currentQuestion = 0;
+  let answers = [];
+  let submitted = false;
+
+  const topicTitle = document.getElementById("topicTitle");
+  const questionNumber = document.getElementById("questionNumber");
+  const questionText = document.getElementById("questionText");
+  const optionsContainer = document.getElementById("options");
+  const progressBar = document.getElementById("progressBar");
+  const previousBtn = document.getElementById("previousBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const quizArea = document.getElementById("quizArea");
+  const resultArea = document.getElementById("resultArea");
+
+  function showUnavailable() {
+    topicTitle.textContent = "Topic unavailable";
+    document.querySelector(".description").textContent =
+      "This topic is not available yet. Please return to the topic list.";
+    quizArea.hidden = true;
+  }
+
+  function renderQuestion() {
+    const q = quiz.questions[currentQuestion];
+
+    topicTitle.textContent = quiz.title;
+    questionNumber.textContent =
+      `Question ${currentQuestion + 1} of ${quiz.questions.length}`;
+
+    questionText.textContent = q.question;
+    optionsContainer.innerHTML = "";
+
+    q.options.forEach((option, index) => {
+      const label = document.createElement("label");
+      label.className = "option";
+
+      if (answers[currentQuestion] === index) {
+        label.classList.add("selected");
+      }
+
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "answer";
+      input.value = index;
+      input.checked = answers[currentQuestion] === index;
+
+      input.addEventListener("change", () => {
+        answers[currentQuestion] = index;
+        renderQuestion();
+      });
+
+      label.appendChild(input);
+      label.appendChild(document.createTextNode(option));
+      optionsContainer.appendChild(label);
+    });
+
+    previousBtn.disabled = currentQuestion === 0;
+    nextBtn.textContent =
+      currentQuestion === quiz.questions.length - 1
+        ? "Submit Quiz"
+        : "Next";
+
+    progressBar.style.width =
+      `${((currentQuestion + 1) / quiz.questions.length) * 100}%`;
+  }
+
+  function previousQuestion() {
+    if (submitted || currentQuestion === 0) return;
+
+    currentQuestion--;
+    renderQuestion();
+  }
+
+  function nextQuestion() {
+    if (submitted) return;
+
+    if (answers[currentQuestion] === undefined) {
+      alert("Please select an answer before continuing.");
+      return;
+    }
+
+    if (currentQuestion < quiz.questions.length - 1) {
+      currentQuestion++;
+      renderQuestion();
+    } else {
+      submitQuiz();
+    }
+  }
+
+  function submitQuiz() {
+    submitted = true;
+
+    const score = quiz.questions.reduce((total, q, index) => {
+      return total + (answers[index] === q.answer ? 1 : 0);
+    }, 0);
+
+    quizArea.hidden = true;
+    resultArea.hidden = false;
+    resultArea.className = "result";
+
+    const heading = document.createElement("h2");
+    heading.textContent = "Quiz Completed!";
+
+    const scoreText = document.createElement("p");
+    scoreText.textContent =
+      `Your score: ${score} out of ${quiz.questions.length}`;
+
+    const retryBtn = document.createElement("button");
+    retryBtn.className = "primary";
+    retryBtn.textContent = "Restart Quiz";
+    retryBtn.onclick = () => window.location.reload();
+
+    resultArea.replaceChildren(heading, scoreText, retryBtn);
+  }
+
+  if (quiz && quiz.questions.length > 0) {
+    renderQuestion();
+  } else {
+    showUnavailable();
+  }
+</script>
+
+</body>
+</html>
