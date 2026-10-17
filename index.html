@@ -215,93 +215,18 @@
 <footer>Quiz — Learn. Practice. Excel.</footer>
 
 <script>
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRpjPX414vA7qEnqGWv1c5zCCTDdyuo1J3BSzykIQfsHoHYmiJoYCzvfAQ7-elRuaf594fVs4ZWKfe/pub?gid=1572833681&single=true&output=csv";
+
   const questionBanks = {
     "business-environment": {
       title: "Business Environment",
-      questions: [
-        {
-          question: "What is the business environment?",
-          options: [
-            "Only internal factors",
-            "Only external factors",
-            "Internal and external factors affecting business",
-            "Only financial factors"
-          ],
-          answer: 2
-        },
-        {
-          question: "Which of the following is an economic factor?",
-          options: [
-            "Inflation",
-            "Company logo",
-            "Office furniture",
-            "Employee uniform"
-          ],
-          answer: 0
-        },
-        {
-          question: "What does SWOT stand for?",
-          options: [
-            "Sales, Work, Operations, Trade",
-            "Strengths, Weaknesses, Opportunities, Threats",
-            "Systems, Wealth, Organisation, Technology",
-            "Strategy, Work, Objectives, Targets"
-          ],
-          answer: 1
-        },
-        {
-          question: "Which institution regulates monetary policy in India?",
-          options: [
-            "SEBI",
-            "NITI Aayog",
-            "Reserve Bank of India",
-            "Election Commission"
-          ],
-          answer: 2
-        },
-        {
-          question: "What is a business opportunity?",
-          options: [
-            "A favourable condition for business growth",
-            "A guaranteed business loss",
-            "A tax penalty",
-            "A decline in customer demand"
-          ],
-          answer: 0
-        }
-      ]
-    },
-
-    "financial-accounting": {
-      title: "Financial Accounting",
-      questions: [
-        {
-          question: "Which statement shows assets and liabilities?",
-          options: [
-            "Cash book",
-            "Balance sheet",
-            "Sales journal",
-            "Purchase order"
-          ],
-          answer: 1
-        },
-        {
-          question: "What is the basic accounting equation?",
-          options: [
-            "Assets = Liabilities + Capital",
-            "Assets = Sales - Expenses",
-            "Capital = Assets + Liabilities",
-            "Profit = Assets + Drawings"
-          ],
-          answer: 0
-        }
-      ]
+      questions: []
     }
   };
 
   const params = new URLSearchParams(window.location.search);
   const requestedTopic = params.get("topic") || "business-environment";
-  const quiz = questionBanks[requestedTopic];
+  let quiz = questionBanks[requestedTopic];
 
   let currentQuestion = 0;
   let answers = [];
@@ -417,11 +342,101 @@
     resultArea.replaceChildren(heading, scoreText, retryBtn);
   }
 
-  if (quiz && quiz.questions.length > 0) {
-    renderQuestion();
-  } else {
-    showUnavailable();
+  function parseCSV(text) {
+    const rows = [];
+    let row = [];
+    let cell = "";
+    let insideQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const next = text[i + 1];
+
+      if (char === '"') {
+        if (insideQuotes && next === '"') {
+          cell += '"';
+          i++;
+        } else {
+          insideQuotes = !insideQuotes;
+        }
+      } else if (char === "," && !insideQuotes) {
+        row.push(cell.trim());
+        cell = "";
+      } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+        if (char === "\r" && next === "\n") i++;
+        row.push(cell.trim());
+        if (row.some(value => value !== "")) rows.push(row);
+        row = [];
+        cell = "";
+      } else {
+        cell += char;
+      }
+    }
+
+    if (cell.length > 0 || row.length > 0) {
+      row.push(cell.trim());
+      if (row.some(value => value !== "")) rows.push(row);
+    }
+    return rows;
   }
+
+  async function loadQuestionsFromSheet() {
+    try {
+      if (!quiz) {
+        showUnavailable();
+        return;
+      }
+
+      topicTitle.textContent = "Loading questions…";
+      questionText.textContent = "Connecting to Google Sheets…";
+
+      const response = await fetch(CSV_URL, { cache: "no-store" });
+      if (!response.ok) throw new Error("Google Sheets returned HTTP " + response.status);
+
+      const csvText = await response.text();
+      const rows = parseCSV(csvText);
+      if (rows.length < 2) throw new Error("The sheet appears to contain no question rows.");
+
+      const headers = rows[0].map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, ""));
+      const findColumn = (...names) => headers.findIndex(h => names.includes(h));
+      const qCol = findColumn("question", "questions");
+      const aCol = findColumn("optiona", "option1", "a");
+      const bCol = findColumn("optionb", "option2", "b");
+      const cCol = findColumn("optionc", "option3", "c");
+      const dCol = findColumn("optiond", "option4", "d");
+      const answerCol = findColumn("correctanswer", "correctoption", "answer", "correct");
+
+      if ([qCol, aCol, bCol, cCol, dCol, answerCol].includes(-1)) {
+        throw new Error("Column headings must be Question, Option A, Option B, Option C, Option D, Correct Answer.");
+      }
+
+      const questions = rows.slice(1).map(row => {
+        const answerText = (row[answerCol] || "").trim().toUpperCase();
+        const answerMatch = answerText.match(/^[ABCD]/);
+        const answer = answerMatch ? "ABCD".indexOf(answerMatch[0]) : Number(answerText) - 1;
+        return {
+          question: (row[qCol] || "").trim(),
+          options: [aCol, bCol, cCol, dCol].map(i => (row[i] || "").trim()),
+          answer
+        };
+      }).filter(q => q.question && q.options.every(Boolean) && Number.isInteger(q.answer) && q.answer >= 0 && q.answer <= 3);
+
+      if (!questions.length) throw new Error("No valid MCQs found. Check the question rows and correct answers (A, B, C, or D).");
+
+      quiz.questions = questions;
+      currentQuestion = 0;
+      answers = [];
+      submitted = false;
+      renderQuestion();
+    } catch (error) {
+      console.error("Quiz loading error:", error);
+      topicTitle.textContent = "Could not load quiz";
+      document.querySelector(".description").textContent = error.message + " Make sure the spreadsheet is published as CSV and the column headings are correct.";
+      quizArea.hidden = true;
+    }
+  }
+
+  loadQuestionsFromSheet();
 </script>
 
 </body>
